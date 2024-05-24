@@ -106,7 +106,9 @@ def atualizar_relacionados(artistas, spotify_client, artista_id):
 def atualizar_status(artistas, spotify_client, artista_id, status):
     if artista_id in artistas:
         artistas[artista_id]['status'] = status
-        if status == '+':
+        candidatos = [id for id, dados in artistas.items() if dados['status'] == '']
+        quantidade_cantidatos = len(candidatos)
+        if status == '+' or quantidade_cantidatos == 1:
             atualizar_relacionados(artistas, spotify_client, artista_id)
 
 def listar_artistas_com_potencial(artistas):
