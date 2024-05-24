@@ -54,13 +54,23 @@ def obter_artistas_seguidos(spotify_client):
     results = spotify_client.current_user_followed_artists(limit=50)
     while results:
         artistas.extend([(artista['id'], artista['name']) for artista in results['artists']['items']])
-        results = spotify_client.next(results) if results['artists']['next'] else None
+        if results['artists']['next']:
+            results = spotify_client.next(results['artists'])
+        else:
+            results = None
     return artistas
 
 def adicionar_candidatos_novos(artistas, spotify_client):
     novos_artistas = obter_artistas_seguidos(spotify_client)
+    novos_adicionados = False
     for id, nome in novos_artistas:
-        adicionar_artista(artistas, id, nome, '') if id not in artistas else None
+        if id not in artistas:
+            adicionar_artista(artistas, id, nome, '')
+            novos_adicionados = True
+    salvar_artistas(artistas, ARTISTAS_TXT)
+    if not novos_adicionados:
+        print("Nenhum novo artista foi adicionado.")
+        input("Pressione qualquer tecla para fechar a aplicação.")
 
 def obter_artistas_relacionados(spotify_client, artista_id):
     try:
