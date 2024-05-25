@@ -205,14 +205,13 @@ def main():
         print(f"Artista: {artista['name']} | {', '.join(artista['genres'])}")
         comando = input("Digite +, - ou =: ")
         if comando == '*':
-            listar_artistas_com_potencial(artistas)
+            identificar_potenciais(artistas)
+            reverter_potenciais(artistas)
             continue
         elif comando == '/':
             adicionar_candidatos_novos(artistas, SPOTIFY)
             continue
         atualizar_status(artistas, SPOTIFY, artista_id, comando)
-        identificar_potenciais(artistas)
-        reverter_potenciais(artistas)
         salvar_artistas(artistas, ARTISTAS_TXT)
         salvar_artistas_potenciais(artistas, ARTISTAS_POTENCIAIS_TXT)
     
