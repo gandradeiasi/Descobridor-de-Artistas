@@ -30,14 +30,28 @@ def carregar_artistas(file_path):
         return {}
     with open(file_path, 'r', encoding='utf-8', errors='ignore') as file:
         linhas = file.readlines()
-    return {id: {'nome': nome, 'status': status, 'relacionados': json.loads(relacionados)}
-            for linha in linhas
-            for id, nome, status, relacionados in [linha.strip().split('|')]}
+    artistas = {}
+    for linha in linhas:
+        partes = linha.strip().split('|')
+        if len(partes) == 4:
+            id, nome, status, relacionados = partes
+            generos = '[]'  # Lista vazia para os gêneros se não estiver presente
+        elif len(partes) == 5:
+            id, nome, status, relacionados, generos = partes
+        else:
+            continue  # Ignorar linhas que não possuem o formato correto
+        artistas[id] = {
+            'nome': nome,
+            'status': status,
+            'relacionados': json.loads(relacionados),
+            'generos': json.loads(generos)
+        }
+    return artistas
 
 def salvar_artistas(artistas, file_path):
     with open(file_path, 'w', encoding='utf-8') as file:
         for id, dados in artistas.items():
-            file.write(f"{id}|{dados['nome']}|{dados['status']}|{json.dumps(dados['relacionados'])}\n")
+            file.write(f"{id}|{dados['nome']}|{dados['status']}|{json.dumps(dados['relacionados'])}|{json.dumps(dados['generos'])}\n")
 
 def salvar_artistas_potenciais(artistas, file_path):
     with open(file_path, 'w', encoding='utf-8') as file:
@@ -45,9 +59,9 @@ def salvar_artistas_potenciais(artistas, file_path):
             if dados['status'] == '*':
                 file.write(f"{dados['nome']}\n")
 
-def adicionar_artista(artistas, id, nome, status):
+def adicionar_artista(artistas, id, nome, status, generos):
     if id not in artistas:
-        artistas[id] = {'nome': nome, 'status': status, 'relacionados': []}
+        artistas[id] = {'nome': nome, 'status': status, 'relacionados': [], 'generos': generos}
 
 def obter_artistas_seguidos(spotify_client):
     artistas = []
@@ -65,7 +79,9 @@ def adicionar_candidatos_novos(artistas, spotify_client):
     novos_adicionados = False
     for id, nome in novos_artistas:
         if id not in artistas:
-            adicionar_artista(artistas, id, nome, '')
+            artista = spotify_client.artist(id)
+            generos = artista['genres']
+            adicionar_artista(artistas, id, nome, '', generos)
             novos_adicionados = True
     salvar_artistas(artistas, ARTISTAS_TXT)
     if not novos_adicionados:
@@ -92,8 +108,10 @@ def atualizar_relacionados(artistas, spotify_client, artista_id):
     for rel_id in relacionados:
         if rel_id not in artistas:
             try:
-                nome = spotify_client.artist(rel_id)['name']
-                adicionar_artista(artistas, rel_id, nome, '')
+                artista = spotify_client.artist(rel_id)
+                nome = artista['name']
+                generos = artista['genres']
+                adicionar_artista(artistas, rel_id, nome, '', generos)
             except spotipy.SpotifyException as e:
                 if e.http_status == 429:
                     retry_after = int(e.headers.get('Retry-After', 10))
@@ -184,7 +202,7 @@ def main():
         except Exception:
             continue
         
-        print(f"Artista: {artista['name']}")
+        print(f"Artista: {artista['name']} | {', '.join(artista['genres'])}")
         comando = input("Digite +, - ou =: ")
         if comando == '*':
             listar_artistas_com_potencial(artistas)
