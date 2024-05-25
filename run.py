@@ -43,7 +43,7 @@ def salvar_artistas_potenciais(artistas, file_path):
     with open(file_path, 'w', encoding='utf-8') as file:
         for id, dados in artistas.items():
             if dados['status'] == '*':
-                file.write(f"{id}|{dados['nome']}\n")
+                file.write(f"{dados['nome']}\n")
 
 def adicionar_artista(artistas, id, nome, status):
     if id not in artistas:
@@ -70,7 +70,7 @@ def adicionar_candidatos_novos(artistas, spotify_client):
     salvar_artistas(artistas, ARTISTAS_TXT)
     if not novos_adicionados:
         print("Nenhum novo artista foi adicionado.")
-        input("Pressione qualquer tecla para fechar a aplicação.")
+        input("Pressione qualquer tecla para continuar.")
 
 def obter_artistas_relacionados(spotify_client, artista_id):
     try:
@@ -184,10 +184,13 @@ def main():
         except Exception:
             continue
         
-        print(f"Artista: {artista['name']} | Restam {len(candidatos) - 1} artistas para classificar")
+        print(f"Artista: {artista['name']}")
         comando = input("Digite +, - ou =: ")
         if comando == '*':
             listar_artistas_com_potencial(artistas)
+            continue
+        elif comando == '/':
+            adicionar_candidatos_novos(artistas, SPOTIFY)
             continue
         atualizar_status(artistas, SPOTIFY, artista_id, comando)
         identificar_potenciais(artistas)
