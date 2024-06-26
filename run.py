@@ -4,6 +4,8 @@ import json
 import os
 import logging
 
+NUMERO_INDICACOES = 2
+
 # Configuração do log
 logging.basicConfig(filename='artistas_log.txt', level=logging.INFO, format='%(asctime)s - %(message)s')
 
@@ -120,7 +122,7 @@ class SpotifyManager:
             self.artistas[artista_id]['status'] = status
             candidatos = [id for id, dados in self.artistas.items() if dados['status'] == '']
             quantidade_candidatos = len(candidatos)
-            if status == '+' or quantidade_candidatos == 1:
+            if status == '+' or quantidade_candidatos <= 1:
                 self.atualizar_relacionados(artista_id)
 
     def listar_artistas_com_potencial(self):
@@ -132,7 +134,7 @@ class SpotifyManager:
         candidatos_potenciais = [
             (id, [artista_id for artista_id, artista in self.artistas.items() if artista['status'] == '+' and id in artista['relacionados']])
             for id, dados in self.artistas.items()
-            if dados['status'] == '=' and len([artista_id for artista_id, artista in self.artistas.items() if artista['status'] == '+' and id in artista['relacionados']]) == 2
+            if dados['status'] == '=' and len([artista_id for artista_id, artista in self.artistas.items() if artista['status'] == '+' and id in artista['relacionados']]) == NUMERO_INDICACOES
         ]
 
         pares_positivos_contagem = {}
@@ -150,7 +152,7 @@ class SpotifyManager:
         candidatos_potenciais = [
             (id, [artista_id for artista_id, artista in self.artistas.items() if artista['status'] == '+' and id in artista['relacionados']])
             for id, dados in self.artistas.items()
-            if dados['status'] == '*' and len([artista_id for artista_id, artista in self.artistas.items() if artista['status'] == '+' and id in artista['relacionados']]) == 2
+            if dados['status'] == '*' and len([artista_id for artista_id, artista in self.artistas.items() if artista['status'] == '+' and id in artista['relacionados']]) == NUMERO_INDICACOES
         ]
 
         pares_positivos_contagem = {}
@@ -162,7 +164,7 @@ class SpotifyManager:
             if dados['status'] == '*':
                 relacionados_positivos = [artista_id for artista_id, artista in self.artistas.items() if artista['status'] == '+' and id in artista['relacionados']]
                 relacionados_positivos_tuple = tuple(relacionados_positivos)
-                if len(relacionados_positivos) != 2 or pares_positivos_contagem.get(relacionados_positivos_tuple, 0) > 1:
+                if len(relacionados_positivos) != NUMERO_INDICACOES or pares_positivos_contagem.get(relacionados_positivos_tuple, 0) > 1:
                     self.artistas[id]['status'] = '='
                     print(f"O artista {self.artistas[id]['nome']} não é mais potencial e foi revertido para =. Referenciado por: {', '.join([self.artistas[artista_id]['nome'] for artista_id in relacionados_positivos])}")
 
